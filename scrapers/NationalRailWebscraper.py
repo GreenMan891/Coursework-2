@@ -1,3 +1,4 @@
+from .BaseScraper import BaseScraper
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -86,6 +87,7 @@ def trainSearch(webDriver, origin, destination, journeyDate, journeyTime, numAdu
 
     dateInputField = wait.until(
         EC.presence_of_element_located((By.ID, "leaving-date")))
+    dateInputField.clear()
     webDriver.execute_script("arguments[0].value = '';", dateInputField)
     dateInputField.send_keys(journeyDate)
     print(f"entered date: {journeyDate}")
@@ -321,6 +323,8 @@ def findCheapestJourney(journeyList):
 
 if __name__ == "__main__":
     webDriver = None
+    timeOfJourney = input("What time do you want to leave?: ")
+    timeOfJourney -= 100
 
     try:
         webDriver = setupWebDriver()
@@ -329,7 +333,7 @@ if __name__ == "__main__":
 
         origin = "Norwich"
         destination = "London"
-        timeOfJourney = "1630"
+        # timeOfJourney = "1630"
 
         numAdults = 1
         numChildren = 0
@@ -346,12 +350,12 @@ if __name__ == "__main__":
 
             if allJourneys:
                 print(f"found {len(allJourneys)} Journeys")
-                for i, journeyData in enumerate(allJourneys):
-                    print(f"\nJourney {i+1}:")
-                    for key, value in journeyData.items():
-                        formattedKey = ' '.join(word.capitalize()
-                                                for word in key.split('_'))
-                        print(f"  {formattedKey}: {value}")
+                # for i, journeyData in enumerate(allJourneys):
+                #     print(f"\nJourney {i+1}:")
+                #     for key, value in journeyData.items():
+                #         formattedKey = ' '.join(word.capitalize()
+                #                                 for word in key.split('_'))
+                #         print(f"  {formattedKey}: {value}")
                 cheapestJourney = findCheapestJourney(allJourneys)
                 if cheapestJourney:
                     print("\n CHEAPEST JOURNEY")
