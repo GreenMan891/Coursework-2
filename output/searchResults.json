@@ -1,0 +1,28 @@
+{
+    "allJourneysCount": 13,
+    "cheapestJourney": {
+        "arrivalTime": "None",
+        "bookingLink": "https://www.nationalrail.co.uk/",
+        "changes": "0 changes (Direct)",
+        "departureTime": "12:32",
+        "destinationStation": "London Liverpool Street",
+        "duration": "1h 45m",
+        "originStation": "Norwich",
+        "priceDisplay": "£70.10",
+        "priceNumeric": 70.1,
+        "provider": "National Rail"
+    },
+    "search_parameters": {
+        "date": "28/05/2025",
+        "destination": "London Liverpool Street",
+        "origin": "Norwich",
+        "time": "1230"
+    },
+    "statusMessages": [
+        " currently checking National Rail...",
+        "found 5 options from National Rail",
+        " currently checking Greater Anglia...",
+        "found 8 options from Greater Anglia",
+        "found the cheapest journey."
+    ]
+}
