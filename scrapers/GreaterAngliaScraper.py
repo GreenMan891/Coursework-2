@@ -9,12 +9,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse  # For URL
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+import random
 
 
 class GreaterAngliaScraper(BaseScraper):
     websiteName = "Greater Anglia"
     websiteUrl = "https://www.greateranglia.co.uk/"
+
+    USER_AGENTS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.27",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0"
+    ]
 
     originStation = ""
     destinationStation = ""
@@ -31,8 +45,10 @@ class GreaterAngliaScraper(BaseScraper):
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
+        PROXY = "185.238.228.72:80"  # Or "user:password@ip_address:port"
+        options.add_argument(f'--proxy-server={PROXY}')
         options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36")
+            "user-agent={random.choice(USER_AGENTS)}")
 
         service = Service(ChromeDriverManager().install())
         driverInstance = webdriver.Chrome(service=service, options=options)
@@ -66,7 +82,7 @@ class GreaterAngliaScraper(BaseScraper):
                 EC.presence_of_element_located((By.ID, "from-buy-header")))
             originField.clear()
             originField.send_keys(origin)
-            time.sleep(0.5)
+            time.sleep(random.uniform(0.5, 1))
             originField.send_keys(Keys.TAB)
             print(f"entered origin {origin}")
 
@@ -74,7 +90,7 @@ class GreaterAngliaScraper(BaseScraper):
                 EC.presence_of_element_located((By.ID, "to-header")))
             destinationField.clear()
             destinationField.send_keys(destination)
-            time.sleep(0.5)
+            time.sleep(random.uniform(0.4, 1))
             destinationField.send_keys(Keys.TAB)
             print(f"entered destination {destination}")
 
@@ -90,7 +106,7 @@ class GreaterAngliaScraper(BaseScraper):
                 f"debug/{self.websiteName.lower().replace(' ', '_')}_origin_error.png")
 
         submitButtonSelector = "button.submit.btn[type='submit']"
-        time.sleep(1)
+        time.sleep(random.uniform(0.8, 1.5))
         submitButton = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, submitButtonSelector)))
         submitButton.click()
@@ -103,12 +119,10 @@ class GreaterAngliaScraper(BaseScraper):
             self.driver.save_screenshot(
                 f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
 
-        # --- Step 2: Parse the initial results URL, modify date/time, and navigate again ---
         parsedUrl = urlparse(initialResultsUrl)
         # parse_qs returns values as lists
         queryParams = parse_qs(parsedUrl.query)
 
-        # Format your target date and time
         try:
             dateObj = datetime.strptime(journeyDate, "%d/%m/%Y")
             formattedTargetDate = dateObj.strftime("%Y-%m-%d")
@@ -120,12 +134,11 @@ class GreaterAngliaScraper(BaseScraper):
                 f"[{self.websiteName}] Invalid target date/time format: {journeyDate}, {journeyTime}")
             return None
 
-        # Update/set the date and time parameters
         queryParams['outwardDate'] = [targetOutwardDatetime]
         queryParams['outwardDateType'] = [
-            'departAfter']  # Assuming this is desired
+            'departAfter']
         queryParams['journeySearchType'] = [
-            journeyType.lower()]  # Ensure this is also set
+            journeyType.lower()]
 
         queryParams.pop('selectedOutward', None)
         queryParams.pop('bookingToken', None)
@@ -135,10 +148,8 @@ class GreaterAngliaScraper(BaseScraper):
         modifiedUrlParts[4] = newQueryString
         finalSearchUrl = urlunparse(modifiedUrlParts)
 
-        # print(f"[{self.websiteName}] Step 2: Navigating to modified URL: {
-        #       finalSearchUrl}")
         self.driver.get(finalSearchUrl)
-        time.sleep(2)
+        time.sleep(random.uniform(1.8, 2.5))
         try:
             cookieAcceptButton = wait.until(
                 EC.element_to_be_clickable(
@@ -150,7 +161,7 @@ class GreaterAngliaScraper(BaseScraper):
             print(f"error accepting cookies for the second time: {e}")
             self.driver.save_screenshot(
                 f"debug/{self.websiteName.lower().replace(' ', '_')}_cookie_error.png")
-        time.sleep(2)
+        time.sleep(random.uniform(1.8, 2.5))
         return self.driver.page_source
 
     def parseResults(self, pageHTML):
@@ -166,17 +177,15 @@ class GreaterAngliaScraper(BaseScraper):
         journeyItemsSource = []
 
         if main_ul:
-            # Get only direct <li> children that also contain the characteristic inner div
             journeyItemsSource = [
                 li for li in main_ul.find_all('li', recursive=False)
-                # Check for a known inner structure of a journey item
                 if li.find('div', class_='_1rn4jd0k')
             ]
             if not journeyItemsSource:
                 print(
                     f"[{self.websiteName}] No direct <li> children with journey structure found in main UL.")
 
-        if not journeyItemsSource:  # if main_ul not found or no valid li in it
+        if not journeyItemsSource:
             print(
                 f"[{self.websiteName}] main UL not found or empty. Trying fallback to find all relevant LIs.")
             allListItems = soupParser.find_all('li')

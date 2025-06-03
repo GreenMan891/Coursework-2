@@ -14,6 +14,19 @@ class NationalRailScraper(BaseScraper):
     websiteName = "National Rail"
     websiteUrl = "https://www.nationalrail.co.uk/"
 
+    USER_AGENTS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.27",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:103.0) Gecko/20100101 Firefox/103.0"
+    ]
+
     originStation = ""
     destinationStation = ""
 
@@ -23,11 +36,14 @@ class NationalRailScraper(BaseScraper):
     def setupDriver(self):
         print("setting up webdriver")
         options = webdriver.ChromeOptions()
-        if self.headless:
-            options.add_argument('--headless')
+        # if self.headless:
+        #     options.add_argument('--headless')
+        options.add_argument("window-size=1920,1080")
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument(
+            "user-agent={random.choice(USER_AGENTS)}")
 
         service = Service(ChromeDriverManager().install())
         driverInstance = webdriver.Chrome(service=service, options=options)
@@ -88,15 +104,23 @@ class NationalRailScraper(BaseScraper):
             dateFieldClick = wait.until(EC.element_to_be_clickable(
                 (By.ID, "leaving-date")))
             dateFieldClick.click()
+            dateFieldClick.clear()
         except Exception as e:
-            print(f"can't click date field")
+            print(f"can't click date field: {e}")
+            self.driver.save_screenshot(
+                f"debug/{self.websiteName.lower().replace(' ', '_')}_date_error.png")
 
         dateInputField = wait.until(
             EC.presence_of_element_located((By.ID, "leaving-date")))
-        dateInputField.clear()
         self.driver.execute_script("arguments[0].value = '';", dateInputField)
+        dateInputField.clear()
+        dateInputField.send_keys(Keys.CONTROL + "a")
+        dateInputField.send_keys(Keys.DELETE)
         dateInputField.send_keys(journeyDate)
         print(f"entered date: {journeyDate}")
+
+        self.driver.save_screenshot(
+            f"debug/{self.websiteName.lower().replace(' ', '_')}_date_error.png")
 
         if len(journeyTime) == 4:
             hourTime = journeyTime[:2]
@@ -265,7 +289,7 @@ class NationalRailScraper(BaseScraper):
                         priceNumeric = float(priceDisplay.replace(
                             '£', '').replace('$', '').strip())
                     except ValueError:
-                        print(f"[{self.websiteName}] Could not parse price string '{
+                        print(f"could not parse price string '{
                               priceDisplay}' to float.")
                         priceNumeric = None  # Ensure it's None if conversion fails
 

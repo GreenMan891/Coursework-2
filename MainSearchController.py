@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 from scrapers.NationalRailScraper import NationalRailScraper
 from scrapers.GreaterAngliaScraper import GreaterAngliaScraper
+from scrapers.TrainsplitScraper import TrainsplitScraper
 import json
 import os
 from utils import cleanPrice
@@ -43,7 +44,7 @@ def main():
     parser.add_argument("--headless", action="store_true",
                         help="Run browsers in headless mode.")
     parser.add_argument("--output_file", default="searchResults.json",
-                    help="Filename for the JSON output (default: searchResults.json)")
+                        help="Filename for the JSON output (default: searchResults.json)")
 
     args = parser.parse_args()
 
@@ -58,21 +59,22 @@ def main():
         "cheapestJourney": None,
         "statusMessages": []
     }
-    
-    outputDir = "output" 
+
+    outputDir = "output"
     if not os.path.exists(outputDir):
         try:
             os.makedirs(outputDir)
             print(f"created directory: {outputDir}")
         except OSError as e:
-            print(f"error creating directory {outputDir}: {e}. output will be in current directory.")
-            output_dir = "." # Fallback to current directory
+            print(f"error creating directory {outputDir}: {
+                  e}. output will be in current directory.")
+            output_dir = "."  # Fallback to current directory
 
     outputJsonFilePath = os.path.join(outputDir, args.output_file)
 
     allScrapers = [
         NationalRailScraper,
-        GreaterAngliaScraper
+        TrainsplitScraper
     ]  # when we make more rail scrapers add them here
 
     allJourneysFound = []
@@ -91,14 +93,16 @@ def main():
         )
         if providerJourneys:
             allJourneysFound.extend(providerJourneys)
-            foundMsg = f"found {len(providerJourneys)} options from {scraperInstance.websiteName}"
+            foundMsg = f"found {len(providerJourneys)} options from {
+                scraperInstance.websiteName}"
             print(foundMsg)
             outputData["statusMessages"].append(foundMsg)
         else:
-            notFoundMsg = f"No journeys found, might be an error with {scraperInstance.websiteName}"
+            notFoundMsg = f"no journeys found, might be an error with {
+                scraperInstance.websiteName}"
             print(notFoundMsg)
             outputData["statusMessages"].append(notFoundMsg)
-    
+
     outputData["allJourneysCount"] = len(allJourneysFound)
 
     if not allJourneysFound:
@@ -113,18 +117,18 @@ def main():
 
     if overallCheapest:
         print("\n cheapest ticket found!!")
-        
+
         cheapestJourneyJson = {
-        "provider": overallCheapest.get('sourceWebsite'),
-        "originStation": overallCheapest.get('originStationName', args.origin),
-        "destinationStation": overallCheapest.get('destinationStationName', args.destination),
-        "departureTime": overallCheapest.get('departureTime', 'N/A'),
-        "arrivalTime": overallCheapest.get('arrivalTime', 'N/A'),
-        "priceDisplay": overallCheapest.get('priceDisplay', 'N/A'),
-        "priceNumeric": overallCheapest.get('price'),
-        "duration": overallCheapest.get('duration', 'N/A'),
-        "changes": overallCheapest.get('changes', 'N/A'),
-        "bookingLink": overallCheapest.get('bookingLink', 'N/A')
+            "provider": overallCheapest.get('sourceWebsite'),
+            "originStation": overallCheapest.get('originStationName', args.origin),
+            "destinationStation": overallCheapest.get('destinationStationName', args.destination),
+            "departureTime": overallCheapest.get('departureTime', 'N/A'),
+            "arrivalTime": overallCheapest.get('arrivalTime', 'N/A'),
+            "priceDisplay": overallCheapest.get('priceDisplay', 'N/A'),
+            "priceNumeric": overallCheapest.get('price'),
+            "duration": overallCheapest.get('duration', 'N/A'),
+            "changes": overallCheapest.get('changes', 'N/A'),
+            "bookingLink": overallCheapest.get('bookingLink', 'N/A')
         }
         outputData["cheapestJourney"] = cheapestJourneyJson
         outputData["statusMessages"].append("found the cheapest journey.")
@@ -132,18 +136,17 @@ def main():
         noCheapestMsg = "could not determine an overall cheapest ticket, error has occured"
         print(f"\n{noCheapestMsg}")
         outputData["statusMessages"].append(noCheapestMsg)
-    
+
     print("\n json output:")
     print(json.dumps(outputData, indent=4, sort_keys=True))
-    
+
     try:
         with open(outputJsonFilePath, 'w', encoding='utf-8') as f:
-            json.dump(outputData, f, ensure_ascii=False, indent=4, sort_keys=True)
+            json.dump(outputData, f, ensure_ascii=False,
+                      indent=4, sort_keys=True)
             print(f"\nJSON output successfully saved to: {outputJsonFilePath}")
     except IOError as e:
         print(f"\nError saving JSON output to file {outputJsonFilePath}: {e}")
-    
-    
 
 
 if __name__ == "__main__":

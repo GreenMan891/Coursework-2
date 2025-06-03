@@ -32,7 +32,7 @@ class BaseScraper(ABC):
         try:
             self.driver = self.setupDriver()
             if not self.driver:
-                print(f"[{self.websiteName}] driver setup failed.")
+                print(f" driver setup failed.")
                 return []
 
             pageHTML = self.searchJourneys(
@@ -42,13 +42,13 @@ class BaseScraper(ABC):
                 with open(f"debug/{self.websiteName.lower().replace(' ', '_')}_results.html", "w", encoding="utf-8") as f:
                     f.write(self.driver.page_source)
                 print(
-                    f"[{self.websiteName}] saved HTML of results page")
+                    f"saved HTML of results page")
 
                 journeys = self.parseResults(self.driver.page_source)
             else:
-                print(f"[{self.websiteName}] couldnt get page HTML from search")
+                print(f"couldnt get page HTML from search")
         except Exception as e:
-            print(f"[{self.websiteName}] An error occurred during scraping: {e}")
+            print(f"An error occurred during scraping: {e}")
             import traceback
             traceback.print_exc()
             if self.driver:
@@ -60,7 +60,7 @@ class BaseScraper(ABC):
         finally:
             if self.driver:
                 self.driver.quit()
-                print(f"[{self.websiteName}] webbriver closed")
+                print(f"webbriver closed")
             self.driver = None
 
         for journey in journeys:
