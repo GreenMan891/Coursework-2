@@ -1,5 +1,5 @@
 from .BaseScraper import BaseScraper
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -35,7 +35,21 @@ class NationalRailScraper(BaseScraper):
 
     def setupDriver(self):
         print("setting up webdriver")
+        PROXY_HOST = "cw2homeproxy.ddns.net"  # Your DDNS hostname
+        PROXY_PORT = "808"                   # Your CCProxy port
+        PROXY_USER = "AICoursework2"       # Your CCProxy username
+        PROXY_PASS = "INSERT PASSWORD HERE"
         options = webdriver.ChromeOptions()
+
+        selenium_wire_options = {
+            'proxy': {
+                'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
+                # CCProxy usually tunnels HTTPS over HTTP proxy
+                'https': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
+                'no_proxy': 'localhost,127.0.0.1'  # Bypass proxy for local addresses
+            }
+        }
+
         if self.headless:
             options.add_argument('--headless')
         options.add_argument("window-size=1920,1080")
@@ -45,10 +59,16 @@ class NationalRailScraper(BaseScraper):
         options.add_argument(
             "user-agent={random.choice(USER_AGENTS)}")
 
-        service = Service(ChromeDriverManager().install())
-        driverInstance = webdriver.Chrome(service=service, options=options)
-        print("webdriver set up")
-        return driverInstance
+        try:
+            service = Service(ChromeDriverManager().install())
+            # When using selenium-wire, instantiate its WebDriver
+            self.driver = webdriver.Chrome(
+                service=service, options=options, seleniumwire_options=selenium_wire_options)
+            print(f"webdriver (with selenium-wire for proxy) setup complete.")
+            return self.driver
+        except Exception as e:
+            print(f"webdriver setup EXCEPTION: {e}")
+            return None
 
     def searchJourneys(self, origin, destination, journeyDate, journeyTime, journeyType="single"):
         print(f"going from {origin} to {destination} on {

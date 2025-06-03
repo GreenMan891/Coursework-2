@@ -1,28 +1,28 @@
 {
-    "allJourneysCount": 9,
+    "allJourneysCount": 5,
     "cheapestJourney": {
-        "arrivalTime": "14:58",
-        "bookingLink": "https://www.trainsplit.com/",
-        "changes": "2",
-        "departureTime": "12:32",
+        "arrivalTime": "None",
+        "bookingLink": "https://www.nationalrail.co.uk/",
+        "changes": "2 changes",
+        "departureTime": "15:23",
         "destinationStation": "London Liverpool Street",
-        "duration": "2h 26m",
+        "duration": "2h 29m",
         "originStation": "Norwich",
         "priceDisplay": "£12.00",
         "priceNumeric": 12.0,
-        "provider": "Trainsplit"
+        "provider": "National Rail"
     },
     "search_parameters": {
-        "date": "28/06/2025",
+        "date": "29/06/2025",
         "destination": "London Liverpool Street",
         "origin": "Norwich",
-        "time": "1230"
+        "time": "1430"
     },
     "statusMessages": [
+        " currently checking Trainsplit...",
+        "no journeys found, might be an error with Trainsplit",
         " currently checking National Rail...",
         "found 5 options from National Rail",
-        " currently checking Trainsplit...",
-        "found 4 options from Trainsplit",
         "found the cheapest journey."
     ]
 }

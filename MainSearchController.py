@@ -73,8 +73,9 @@ def main():
     outputJsonFilePath = os.path.join(outputDir, args.output_file)
 
     allScrapers = [
-        NationalRailScraper,
-        TrainsplitScraper
+        #NationalRailScraper,
+        TrainsplitScraper,
+        NationalRailScraper
     ]  # when we make more rail scrapers add them here
 
     allJourneysFound = []

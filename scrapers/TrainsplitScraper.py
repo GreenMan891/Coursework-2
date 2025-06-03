@@ -1,5 +1,5 @@
 from .BaseScraper import BaseScraper
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -39,7 +39,21 @@ class TrainsplitScraper(BaseScraper):
 
     def setupDriver(self):
         print("setting up webdriver")
+        PROXY_HOST = "cw2homeproxy.ddns.net"  # Your DDNS hostname
+        PROXY_PORT = "808"                   # Your CCProxy port
+        PROXY_USER = "AICoursework2"       # Your CCProxy username
+        PROXY_PASS = "INSERT PASSWORD HERE"
         options = webdriver.ChromeOptions()
+
+        selenium_wire_options = {
+            'proxy': {
+                'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
+                # CCProxy usually tunnels HTTPS over HTTP proxy
+                'https': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
+                'no_proxy': 'localhost,127.0.0.1'  # Bypass proxy for local addresses
+            }
+        }
+
         if self.headless:
             options.add_argument('--headless')
         options.add_argument("window-size=1920,1080")
@@ -48,20 +62,31 @@ class TrainsplitScraper(BaseScraper):
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument(
             "user-agent={random.choice(USER_AGENTS)}")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"]) 
+        options.add_experimental_option("useAutomationExtension", False) 
 
-        service = Service(ChromeDriverManager().install())
-        driverInstance = webdriver.Chrome(service=service, options=options)
-        print("webdriver set up")
-        return driverInstance
+        try:
+            service = Service(ChromeDriverManager().install())
+            # When using selenium-wire, instantiate its WebDriver
+            self.driver = webdriver.Chrome(
+                service=service, options=options, seleniumwire_options=selenium_wire_options)
+            print(f"webdriver (with selenium-wire for proxy) setup complete.")
+            return self.driver
+        except Exception as e:
+            print(f"webdriver setup EXCEPTION: {e}")
+            return None
 
     def searchJourneys(self, origin, destination, journeyDate, journeyTime, journeyType="single"):
         print(f"going from {origin} to {destination} on {
               journeyDate} at {journeyTime}")
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})") 
         self.originStation = origin
         self.destinationStation = destination
         self.driver.get(self.websiteUrl)
         wait = WebDriverWait(self.driver, 20)
-
+        
+        time.sleep(random.uniform(1,2))
         # cookies again
         try:
             cookieAcceptButton = wait.until(
@@ -83,7 +108,7 @@ class TrainsplitScraper(BaseScraper):
                 EC.visibility_of_element_located(origin_input_selector))
             origin_field.clear()
             origin_field.send_keys(origin)
-            time.sleep(random.uniform(0.5, 1))
+            time.sleep(random.uniform(1, 2))
             origin_field.send_keys(Keys.TAB)
             print(f"entered origin {origin}")
 
@@ -93,7 +118,7 @@ class TrainsplitScraper(BaseScraper):
                 EC.visibility_of_element_located(destination_input_selector))
             destination_field.clear()
             destination_field.send_keys(destination)
-            time.sleep(random.uniform(0.4, 1))
+            time.sleep(random.uniform(1, 2))
             destination_field.send_keys(Keys.TAB)
             print(f"entered destination {destination}")
         except Exception as e:
@@ -168,7 +193,7 @@ class TrainsplitScraper(BaseScraper):
                 nav_button.click()
                 print(f"clicked {
                       action_str} month in datepicker.")
-                time.sleep(0.4)
+                time.sleep(random.uniform(1, 2.5))
                 dialog_element = wait.until(
                     EC.visibility_of_element_located(dialog_selector))
                 retries -= 1
@@ -184,7 +209,7 @@ class TrainsplitScraper(BaseScraper):
             wait.until(EC.element_to_be_clickable(
                 day_element_to_click)).click()
             print(f"clicked day: {target_day_str}")
-            time.sleep(0.3)
+            time.sleep(random.uniform(1, 2))
 
             target_hour_str = journeyTime[:2]
             target_minute_str = journeyTime[2:]
@@ -200,16 +225,16 @@ class TrainsplitScraper(BaseScraper):
             Select(minute_select_element).select_by_visible_text(
                 target_minute_str)
             print(f"selected minute: {target_minute_str}")
-            time.sleep(0.3)
+            time.sleep(random.uniform(1, 2))
 
             # click done button
             done_button_selector = (
                 By.XPATH, "//div[@class='action-buttons']/button[contains(normalize-space(),'Done')]")
             wait.until(EC.element_to_be_clickable(
                 done_button_selector)).click()
-            print(f"clicked 'Done' in date/time dialog.")
+            print(f"clicked done in date/time dialog.")
 
-            time.sleep(0.5)
+            time.sleep(random.uniform(1, 3))
         except Exception as e:
             print(f"error with the date and time: {e}")
             done_button_selector = (
@@ -230,6 +255,9 @@ class TrainsplitScraper(BaseScraper):
         self.driver.execute_script(
             "arguments[0].click();", submit_button_element)
         print(f"clicked main 'Find Tickets' button.")
+        
+        self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": random.choice(self.USER_AGENTS)})
+        #print(self.driver.execute_script("return navigator.userAgent;"))
 
         try:
             resultsUrlPart = "/results"
@@ -241,7 +269,7 @@ class TrainsplitScraper(BaseScraper):
         self.driver.save_screenshot(
             f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
 
-        time.sleep(3)
+        time.sleep(random.uniform(1, 3))
         return self.driver.page_source
 
     def parseResults(self, pageHTML):

@@ -5,6 +5,7 @@ class BaseScraper(ABC):
     # abstract class for all other scrapers
     websiteName = ""
     websiteUrl = ""
+    USER_AGENTS = []
 
     def __init__(self, headless=True):
         self.headless = headless
