@@ -36,8 +36,8 @@ class NationalRailScraper(BaseScraper):
     def setupDriver(self):
         print("setting up webdriver")
         options = webdriver.ChromeOptions()
-        # if self.headless:
-        #     options.add_argument('--headless')
+        if self.headless:
+            options.add_argument('--headless')
         options.add_argument("window-size=1920,1080")
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
