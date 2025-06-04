@@ -41,7 +41,7 @@ def main():
     parser.add_argument("date", help="Journey date (DD/MM/YYYY): ")
     parser.add_argument(
         "time", help="Journey time (HHMM, e.g., 0930 for 9:30 AM): ")
-    parser.add_argument("--headless", action="store_true",
+    parser.add_argument("--headless", action="store_true", #MAKE SURE TO ENABLE THIS FOR THE AI
                         help="Run browsers in headless mode.")
     parser.add_argument("--output_file", default="searchResults.json",
                         help="Filename for the JSON output (default: searchResults.json)")
@@ -68,15 +68,16 @@ def main():
         except OSError as e:
             print(f"error creating directory {outputDir}: {
                   e}. output will be in current directory.")
-            output_dir = "."  # Fallback to current directory
+            output_dir = "."
 
     outputJsonFilePath = os.path.join(outputDir, args.output_file)
 
+    #IF YOU WANT TO CHANGE WHICH SCRAPERS WE USE CHANGE THEM HERE
     allScrapers = [
-        #NationalRailScraper,
         TrainsplitScraper,
-        NationalRailScraper
-    ]  # when we make more rail scrapers add them here
+        NationalRailScraper,
+        GreaterAngliaScraper
+    ]
 
     allJourneysFound = []
 

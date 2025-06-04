@@ -132,7 +132,8 @@ class GreaterAngliaScraper(BaseScraper):
         submitButton = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, submitButtonSelector)))
         submitButton.click()
-
+        
+        self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": random.choice(self.USER_AGENTS)})
         try:
             resultsUrlPart = "/book/results"
             wait.until(EC.url_contains(resultsUrlPart))
@@ -170,7 +171,8 @@ class GreaterAngliaScraper(BaseScraper):
         modifiedUrlParts = list(parsedUrl)
         modifiedUrlParts[4] = newQueryString
         finalSearchUrl = urlunparse(modifiedUrlParts)
-
+            
+        self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": random.choice(self.USER_AGENTS)})
         self.driver.get(finalSearchUrl)
         time.sleep(random.uniform(1.8, 2.5))
         try:

@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
+import random
 
 
 class NationalRailScraper(BaseScraper):
@@ -51,7 +52,7 @@ class NationalRailScraper(BaseScraper):
         }
 
         if self.headless:
-            options.add_argument('--headless')
+             options.add_argument('--headless')
         options.add_argument("window-size=1920,1080")
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
@@ -191,22 +192,32 @@ class NationalRailScraper(BaseScraper):
         #     returnButton = wait.until((EC.element_to_be_clickable(
         #         By.ID, "radio-jp-ticket-type-return")))
         #     returnButton.click()
-
-        submitButtonSelector = "//button[@aria-label='Get times and prices']"
-        submitButton = wait.until(EC.element_to_be_clickable(
-            (By.XPATH, submitButtonSelector)))
-        # submitButton = wait.until((EC.element_to_be_clickable(By.ID, "button-jp")))
-        submitButton.click()
-
+        try:
+            print("looking for submit button")
+            submitButtonSelector = "//button[@aria-label='Get times and prices']"
+            submitButton = wait.until(EC.element_to_be_clickable(
+                (By.XPATH, submitButtonSelector)))
+            submitButton.click()
+            print("submit button pressed")
+        except Exception as e:
+            print("can't find submit button: {e}")
+            try:
+                submitButton = wait.until((EC.element_to_be_clickable(By.ID, "button-jp")))
+                submitButton.click()
+            except Exception as e:
+                print("tried again to find submit button to no avail")
+        
+        time.sleep(random.uniform(3,5))
+        
         try:
             wait.until(EC.presence_of_element_located(
                 (By.ID, "result-card-price-outward-0")))
             print("results page loaded")
-
         except Exception as e:
             print(f"Error, results page didnt load {e}")
             self.driver.save_screenshot("debugResultsError.png")
-
+        self.driver.save_screenshot(
+            f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
         return self.driver.page_source
 
     def parseResults(self, pageHTML):

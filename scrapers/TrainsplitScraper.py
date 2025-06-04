@@ -247,6 +247,8 @@ class TrainsplitScraper(BaseScraper):
         # dateInputField.clear()
         # self.driver.execute_script("arguments[0].value = '';", dateInputField)
         # dateInputField.send_keys(journeyDate)
+        
+        self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": random.choice(self.USER_AGENTS)})
 
         main_submit_button_selector = (
             By.CSS_SELECTOR, "button.btn.search.btn-primary")
@@ -257,8 +259,9 @@ class TrainsplitScraper(BaseScraper):
         print(f"clicked main 'Find Tickets' button.")
         
         self.driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": random.choice(self.USER_AGENTS)})
+        
         #print(self.driver.execute_script("return navigator.userAgent;"))
-
+        
         try:
             resultsUrlPart = "/results"
             wait.until(EC.url_contains(resultsUrlPart))
@@ -268,7 +271,29 @@ class TrainsplitScraper(BaseScraper):
                 f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
         self.driver.save_screenshot(
             f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
-
+        
+        try_again_button_selector = (By.XPATH, "//a[contains(@class, 'btn-blue-normal') and text()='Try again?']")
+        
+        try:
+            print("checking for try again button")
+            try_again_button = WebDriverWait(self.driver, 4).until(EC.element_to_be_clickable(try_again_button_selector))
+            print("try again button found, clicking it")
+            try_again_button.click()
+            time.sleep(5)
+        except:
+            print("no try again button found")
+        
+        try:
+            resultsGridID = "classic-grid"
+            wait.until(EC.presence_of_element_located((By.ID, resultsGridID)))
+            print("Found results grid!!")
+        except:
+            print("couldn't find results grid")
+            self.driver.save_screenshot(
+                f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
+        self.driver.save_screenshot(
+            f"debug/{self.websiteName.lower().replace(' ', '_')}_search_error.png")
+        
         time.sleep(random.uniform(1, 3))
         return self.driver.page_source
 
